@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Campus Library</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Campus Library</h1>
+    <p class="sub">Authors and their books &mdash; data served by GraphQL</p>
+    <div id="list">Loading&hellip;</div>
+    <p id="message" role="status" aria-live="polite"></p>
+    <form id="addForm">
+      <h3>Add a book</h3>
+      <input id="title" placeholder="Book title" required />
+      <input id="year" type="number" placeholder="Year" style="width: 90px" />
+      <select id="authorId">
+        <option value="1">Asha Patel</option>
+        <option value="2">Ravi Kumar</option>
+      </select>
+      <button type="submit">Add book</button>
+    </form>
+    <script>
+      const API = "http://localhost:4000/";
+      // helper: send a GraphQL query/mutation to the API
+      async function gql(query, variables) {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, variables }),
+        });
+        const json = await res.json();
+        if (!res.ok || json.errors) {
+          throw new Error(
+            json.errors?.map((error) => error.message).join(", ") ||
+              `Request failed with status ${res.status}`,
+          );
+        }
+        return json.data;
+      }
+      // 1. READ: load all authors with their books
+      async function load() {
+        try {
+          const data = await gql(
+            `{ authors { id name country books { title year } } }`,
+          );
+          document.getElementById("list").innerHTML = data.authors
+            .map(
+              (a) => ` 
+ <div class="author-card"> 
+ <h2>${a.name}</h2> 
+ <div class="country">${a.country || ""}</div> 
+ ${a.books
+   .map(
+     (b) => `<div class="book">${b.title} <span  
+class="yr">(${b.year})</span></div>`,
+   )
+   .join("")} 
+ </div>`,
+            )
+            .join("");
+        } catch (error) {
+          document.getElementById("list").textContent =
+            `Could not load books: ${error.message}`;
+        }
+      }
+      // 2. WRITE: add a book, then reload the list
+      document
+        .getElementById("addForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const message = document.getElementById("message");
+          message.textContent = "";
+          const title = document.getElementById("title").value.trim();
+          const yearInput = document.getElementById("year").value;
+          const year = yearInput === "" ? null : Number(yearInput);
+          const authorId = document.getElementById("authorId").value;
+          try {
+            await gql(
+              `mutation($t:String!,$y:Int,$a:ID!){ addBook(title:$t, year:$y, authorId:$a){ id } }`,
+              { t: title, y: year, a: authorId },
+            );
+            e.target.reset();
+            message.textContent = "Book added.";
+            await load();
+          } catch (error) {
+            message.textContent = `Could not add book: ${error.message}`;
+          }
+        });
+      load();
+    </script>
+  </body>
+</html>

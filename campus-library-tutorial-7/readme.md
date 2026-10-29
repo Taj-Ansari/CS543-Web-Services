@@ -24,4 +24,4 @@ Tutorial 7 for the Web Services course. This project provides a GraphQL API for 
 
 ## GitHub repository
 
-Add your repository link here: `https://github.com/Taj-Ansari/CS543-Web-Services/tree/65489db9fb6bd3357b9ed672740cbdd2ceb3691e/campus-library-tutorial-7`
+Repository link here: `https://sl1nk.com/yzj8thz`

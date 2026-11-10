@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const app = express();
 app.use(express.json());
+app.use(express.static("public"));
+
 const SECRET = "dev-secret-change-me";
 const users = [
   {
